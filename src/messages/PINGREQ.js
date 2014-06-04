@@ -4,24 +4,6 @@ var DecoderConstructor = require('../DecoderConstructor.js').DecoderConstructor;
 
 function PINGREQ() {
 	PINGREQ.super_.call(this);
-
-	this.protocolName = 'MQIsdp';
-	this.protocolVersion = 3;
-
-	this.needUsername = false;
-	this.needPassword = false;
-	this.willRetain = false;
-	this.willQos = 0;
-	this.willFlag = 0;
-	this.cleanSession = false;
-
-	this.keepAlive = 0;
-
-	this.clientId = null;
-	this.topic = null;
-	this.message = null;
-	this.username = null;
-	this.password = null;
 };
 
 require('util').inherits(PINGREQ, Message);
