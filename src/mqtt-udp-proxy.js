@@ -1,7 +1,7 @@
 var net = require('net');
 var Message = require('./Message.js').Message;
-var EncoderConstructor = require('./proto/EncoderConstructor.js').EncoderConstructor;
-var DecoderConstructor = require('./proto/DecoderConstructor.js').DecoderConstructor;
+var EncoderConstructor = require('./EncoderConstructor.js').EncoderConstructor;
+var DecoderConstructor = require('./DecoderConstructor.js').DecoderConstructor;
 
 var ec = new EncoderConstructor;
 
