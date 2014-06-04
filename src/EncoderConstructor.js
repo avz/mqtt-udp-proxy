@@ -8,6 +8,13 @@ function EncoderConstructor() {
 	this.codeBlocks = [];
 };
 
+var checkBordersCode = function(needLength) {
+	if(needLength !== undefined)
+		return 'if(_buf.length - _offset < ' + needLength + ') throw new RangeError("mqtt-udp-proxy:bof");\n\n';
+	else
+		return 'if(_buf.length <= _offset) throw new RangeError("mqtt-udp-proxy:bof");\n\n';
+};
+
 EncoderConstructor.prototype.string = function(property, maxLength) {
 	this.codeBlocks.push(this._string(property, maxLength));
 
@@ -46,7 +53,7 @@ EncoderConstructor.prototype.len = function(property) {
 
 EncoderConstructor.prototype.inline = function(callable) {
 	var code = '/* inline(' + callable + '); */\n\n'
-		+ callable + '(_buf, _offset);\n';
+		+ '_offset = ' + callable + '(_buf, _offset);\n';
 
 	this.codeBlocks.push(code);
 
@@ -98,6 +105,7 @@ EncoderConstructor.prototype._optionalString = function(property, maxLength) {
 
 EncoderConstructor.prototype._flags8Body = function(fields) {
 	var code = '/* _flags8Body(' + JSON.stringify(fields) + '); */\n\n'
+		+ checkBordersCode()
 		+ 'var _flags = 0;\n\n';
 
 	if(!fields instanceof Array)
@@ -175,6 +183,7 @@ EncoderConstructor.prototype._stringBody = function(property, maxLength) {
 			+ '	throw new Error("${property} is too long");\n\n'
 	}
 
+	code += checkBordersCode('_len + 2');
 	code += this._uint16Body('_len') + '\n';
 	code += '_offset += _buf.write(${property}, _offset);\n';
 
@@ -190,6 +199,7 @@ EncoderConstructor.prototype._bufferBody = function(property, maxLength) {
 			+ '	throw new Error("${property} is too long");\n\n'
 	}
 
+	code += checkBordersCode('_len + 2');
 	code += this._uint16Body('_len') + '\n';
 	code += '${property}.copy(_buf, _offset);\n';
 	code += '_offset += _len;\n'
@@ -199,6 +209,7 @@ EncoderConstructor.prototype._bufferBody = function(property, maxLength) {
 
 EncoderConstructor.prototype._uint16Body = function(property) {
 	var code = '/* _uint16Body(' + property + '); */\n\n'
+		+ checkBordersCode(2)
 		+ 'if(${property} < 0 || ${property} > 0xffff)\n'
 		+ '	throw new Error("Uint16 overflow/underflow: " + ${property});\n\n';
 
@@ -209,7 +220,8 @@ EncoderConstructor.prototype._uint16Body = function(property) {
 };
 
 EncoderConstructor.prototype._uint8Body = function(property) {
-	var code = '/* _uint8Body(' + JSON.stringify(property) + '); */\n\n'
+	var code = '/* _uint8Body(' + property + '); */\n\n'
+		+ checkBordersCode()
 		+ 'if(${property} < 0 || ${property} > 0xff)\n'
 		+ '	throw new Error("Uint8 overflow/underflow: " + ${property});\n\n';
 
@@ -221,17 +233,31 @@ EncoderConstructor.prototype._uint8Body = function(property) {
 EncoderConstructor.prototype._lenBody = function(property) {
 	var code = '/* _lenBody(' + property + '); */\n\n';
 
-	code += 'if(${property} > 127) {\n';
-	code += '	var _l = ${property};\n';
-	code += '	while(_l) {\n';
-	code += '		_buf[_offset++] = _l % 128;\n';
-	code += '		_l >>= 7;\n';
-	code += '	}\n';
-	code += '} else {\n';
-	code += '	_buf[_offset++] = ${property};\n';
-	code += '}\n';
+	code += 'var _l = ' + property + ';\n\n';
+	code += 'if(_l >= 268435455)\n';
+	code += '	throw new Error("Length is too large");\n\n';
 
-	return this._replace(code, {property: property});
+	code += '_buf[_offset++] = (_l % 128) | 0x80;\n';
+	code += '_l >>= 7;\n';
+	code += '_buf[_offset++] = (_l % 128) | 0x80;\n';
+	code += '_l >>= 7;\n';
+	code += '_buf[_offset++] = (_l % 128) | 0x80;\n';
+	code += '_l >>= 7;\n';
+	code += '_buf[_offset++] = (_l % 128);\n';
+
+//	code += 'if(${property} > 127) {\n';
+//	code += '	var _l = ${property};\n';
+//	code += '	while(_l) {\n';
+//	code += '		' + checkBordersCode()
+//	code += '		_buf[_offset++] = _l % 128;\n';
+//	code += '		_l >>= 7;\n';
+//	code += '	}\n';
+//	code += '} else {\n';
+//	code += '	' + checkBordersCode()
+//	code += '	_buf[_offset++] = ${property};\n';
+//	code += '}\n';
+
+	return code;
 };
 
 exports.EncoderConstructor = EncoderConstructor;

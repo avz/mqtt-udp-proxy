@@ -7,6 +7,8 @@ function Message() {
 	this.length = 0;
 };
 
+exports.Message = Message;
+
 Message.types = {
 	_0: 0,
 	CONNECT: 1,
@@ -45,6 +47,9 @@ Message.typeNames = {
 	15: '_15'
 };
 
+var EncoderConstructor = require('./EncoderConstructor.js').EncoderConstructor;
+var DecoderConstructor = require('./DecoderConstructor.js').DecoderConstructor;
+
 Message.CONNECT = require('./messages/CONNECT.js').CONNECT;
 Message.PINGREQ = require('./messages/PINGREQ.js').PINGREQ;
 
@@ -59,6 +64,21 @@ Message.prototype.writeFixedHeader = (new EncoderConstructor)
 	.toFunction()
 ;
 
+Message.prototype.write = function(buf, offset) {
+	var fixedHeaderLength = 1 + 4;
+
+	var so = offset;
+
+	offset += fixedHeaderLength;
+	var bso = offset;
+	offset = this.writeBody(buf, offset);
+
+	this.length = offset - bso;
+	this.writeFixedHeader(buf, so);
+
+	return offset;
+};
+
 Message.prototype.readFixedHeader = (new DecoderConstructor)
 	.flags8([
 		['this.type', 4],
@@ -69,3 +89,5 @@ Message.prototype.readFixedHeader = (new DecoderConstructor)
 	.len('this.length')
 	.toFunction()
 ;
+
+//console.log(Message.prototype.readFixedHeader.toString());

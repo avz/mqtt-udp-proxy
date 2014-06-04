@@ -1,4 +1,6 @@
 var Message = require('../Message.js').Message;
+var EncoderConstructor = require('../EncoderConstructor.js').EncoderConstructor;
+var DecoderConstructor = require('../DecoderConstructor.js').DecoderConstructor;
 
 function PINGREQ() {
 	PINGREQ.super_.call(this);

@@ -1,7 +1,11 @@
 var Message = require('../Message.js').Message;
+var EncoderConstructor = require('../EncoderConstructor.js').EncoderConstructor;
+var DecoderConstructor = require('../DecoderConstructor.js').DecoderConstructor;
 
 function CONNECT() {
 	CONNECT.super_.call(this);
+
+	this.type = Message.types.CONNECT;
 
 	this.protocolName = 'MQIsdp';
 	this.protocolVersion = 3;
@@ -24,8 +28,7 @@ function CONNECT() {
 
 require('util').inherits(CONNECT, Message);
 
-CONNECT.prototype.write = (new EncoderConstructor)
-	.inline('this.writeFixedHeader')
+CONNECT.prototype.writeBody = (new EncoderConstructor)
 	.string('this.protocolName')
 	.uint8('this.protocolVersion')
 	.flags8([
