@@ -224,7 +224,7 @@ DecoderConstructor.prototype._lenBody = function(property) {
 	code += '	' + checkBordersCode()
 	code += '	' + property + ' = (_buf[_offset++] & 0x7f) * _m;\n'
 	code += '	_m *= 128;\n\n';
-	code += '	if(_m > 0x100000000)\n';
+	code += '	if(_m >= 268435455)\n';
 	code += '		throw new Error("Length is too big");\n\n'
 	code += '} while(_buf[_offset - 1] & 0x80);\n';
 
