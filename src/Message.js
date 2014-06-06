@@ -92,7 +92,7 @@ Message.prototype.readFixedHeader = (new DecoderConstructor)
 	.toFunction()
 ;
 
-Message.prototype.checkRemainigLength = function(buf, offset, len) {
+Message.prototype.checkRemainingLength = function(buf, offset, len) {
 	if(len - offset < this.length)
 		throw new Error("mqtt-udp-proxy:bof");
 
