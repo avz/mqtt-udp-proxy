@@ -55,6 +55,7 @@ Message.CONNACK = require('./messages/CONNACK.js').CONNACK;
 Message.PINGREQ = require('./messages/PINGREQ.js').PINGREQ;
 Message.PINGRESP = require('./messages/PINGRESP.js').PINGRESP;
 Message.PUBLISH = require('./messages/PUBLISH.js').PUBLISH;
+Message.PUBACK = require('./messages/PUBACK.js').PUBACK;
 
 Message.prototype.writeFixedHeader = (new EncoderConstructor)
 	.flags8([
