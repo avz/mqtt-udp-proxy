@@ -51,6 +51,7 @@ CONNECT.prototype.writeBody = (new EncoderConstructor)
 
 CONNECT.prototype.read = (new DecoderConstructor)
 	.inline('this.readFixedHeader')
+	.inline('this.checkRemainigLength')
 	.string('this.protocolName')
 	.uint8('this.protocolVersion')
 	.flags8([

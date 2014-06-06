@@ -51,7 +51,9 @@ var EncoderConstructor = require('./EncoderConstructor.js').EncoderConstructor;
 var DecoderConstructor = require('./DecoderConstructor.js').DecoderConstructor;
 
 Message.CONNECT = require('./messages/CONNECT.js').CONNECT;
+Message.CONNACK = require('./messages/CONNACK.js').CONNACK;
 Message.PINGREQ = require('./messages/PINGREQ.js').PINGREQ;
+Message.PINGRESP = require('./messages/PINGRESP.js').PINGRESP;
 
 Message.prototype.writeFixedHeader = (new EncoderConstructor)
 	.flags8([
@@ -89,5 +91,12 @@ Message.prototype.readFixedHeader = (new DecoderConstructor)
 	.len('this.length')
 	.toFunction()
 ;
+
+Message.prototype.checkRemainigLength = function(buf, offset, len) {
+	if(len - offset < this.length)
+		throw new Error("mqtt-udp-proxy:bof");
+
+	return offset;
+};
 
 //console.log(Message.prototype.readFixedHeader.toString());
