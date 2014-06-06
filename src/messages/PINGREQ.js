@@ -9,6 +9,9 @@ function PINGREQ() {
 require('util').inherits(PINGREQ, Message);
 
 PINGREQ.prototype.write = function(buf, offset) {
+	if(buf.length - offset < 2)
+		throw new RangeError("mqtt-udp-proxy:bof");
+
 	buf[offset] = Message.types.PINGREQ << 4;
 	buf[offset + 1] = 0;
 

@@ -9,7 +9,10 @@ function PINGRESP() {
 require('util').inherits(PINGRESP, Message);
 
 PINGRESP.prototype.write = function(buf, offset) {
-	buf[offset] = Message.types.PINGREQ << 4;
+	if(buf.length - offset < 2)
+		throw new RangeError("mqtt-udp-proxy:bof");
+
+	buf[offset] = Message.types.PINGRESP << 4;
 	buf[offset + 1] = 0;
 
 	return offset + 2;
