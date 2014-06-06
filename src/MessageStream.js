@@ -7,6 +7,7 @@ function MessageStream(stream) {
 
 	this.head = null;
 	this.stream = stream;
+	this.writeBuffer = new Buffer(1);
 
 	stream.on('readable', function() {
 		var chunk = stream.read();
@@ -58,11 +59,20 @@ MessageStream.prototype._parse = function(chunk) {
 	}
 };
 
-var buf = new Buffer(1);
 MessageStream.prototype.send = function(message) {
-	var len = message.write(buf, 0);
+	while(true) {
+		try {
+			var len = message.write(this.writeBuffer, 0);
 
-	this.stream.write(buf.slice(0, len));
+			this.stream.write(this.writeBuffer.slice(0, len));
+			break;
+		} catch(e) {
+			if(e.message !== 'mqtt-udp-proxy:bof')
+				throw e;
+
+			this.writeBuffer = new Buffer(this.writeBuffer.length * 2);
+		}
+	}
 };
 
 exports.MessageStream = MessageStream;
@@ -74,6 +84,7 @@ var s = net.connect(1883, 'localhost', function() {
 
 	var connect = new Message.CONNECT;
 	connect.clientId = '12312321';
+	connect.keepAlive = 10;
 
 	ms.send(connect);
 	ms.send(new Message.PINGREQ);
@@ -89,4 +100,4 @@ var s = net.connect(1883, 'localhost', function() {
 setInterval(function() {
 	console.log(n);
 	n = 0;
-}, 1000);
+}, 1000).unref();

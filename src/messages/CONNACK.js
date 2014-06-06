@@ -19,7 +19,7 @@ CONNACK.prototype.writeBody = (new EncoderConstructor)
 
 CONNACK.prototype.read = (new DecoderConstructor)
 	.inline('this.readFixedHeader')
-	.inline('this.checkRemainigLength')
+	.inline('this.checkRemainingLength')
 	.uint8('this._reserved')
 	.uint8('this.returnCode')
 	.toFunction()

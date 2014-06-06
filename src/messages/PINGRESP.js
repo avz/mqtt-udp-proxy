@@ -20,7 +20,7 @@ PINGRESP.prototype.read = function(buf, offset, len) {
 		throw new RangeError("mqtt-udp-proxy:bof");
 
 	if(buf[offset + 1] !== 0)
-		throw new Error('PINGREQ must be zero-body');
+		throw new Error('PINGRESP must be zero-body');
 
 	return offset + 2;
 };;
