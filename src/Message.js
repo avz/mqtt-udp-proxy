@@ -52,10 +52,19 @@ var DecoderConstructor = require('./DecoderConstructor.js').DecoderConstructor;
 
 Message.CONNECT = require('./messages/CONNECT.js').CONNECT;
 Message.CONNACK = require('./messages/CONNACK.js').CONNACK;
-Message.PINGREQ = require('./messages/PINGREQ.js').PINGREQ;
-Message.PINGRESP = require('./messages/PINGRESP.js').PINGRESP;
 Message.PUBLISH = require('./messages/PUBLISH.js').PUBLISH;
 Message.PUBACK = require('./messages/PUBACK.js').PUBACK;
+//Message.PUBREC = require('./messages/PUBREC.js').PUBREC;
+//Message.PUBREQ = require('./messages/PUBREQ.js').PUBREQ;
+//Message.PUBREL = require('./messages/PUBREL.js').PUBREL;
+//Message.PUBCOMP = require('./messages/PUBCOMP.js').PUBCOMP;
+Message.SUBSCRIBE = require('./messages/SUBSCRIBE.js').SUBSCRIBE;
+//Message.SUBACK = require('./messages/SUBACK.js').SUBACK;
+//Message.UNSUBSCRIBE = require('./messages/UNSUBSCRIBE.js').UNSUBSCRIBE;
+//Message.UNSUBACK = require('./messages/UNSUBACK.js').UNSUBACK;
+Message.PINGREQ = require('./messages/PINGREQ.js').PINGREQ;
+Message.PINGRESP = require('./messages/PINGRESP.js').PINGRESP;
+//Message.DISCONNECT = require('./messages/DISCONNECT.js').DISCONNECT;
 
 Message.prototype.writeFixedHeader = (new EncoderConstructor)
 	.flags8([
@@ -81,6 +90,14 @@ Message.prototype.write = function(buf, offset) {
 	this.writeFixedHeader(buf, so);
 
 	return offset;
+};
+
+// dummy read
+Message.prototype.read = function(buf, offset, len) {
+	offset = this.readFixedHeader(buf, offset, len);
+	this.checkRemainingLength(buf, offset, len);
+
+	return offset + this.length;
 };
 
 Message.prototype.readFixedHeader = (new DecoderConstructor)
