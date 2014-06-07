@@ -108,6 +108,7 @@ Message.prototype.readFixedHeader = (new DecoderConstructor)
 		['this.retain', 1]
 	])
 	.len('this.length')
+	.saveOffset('this._vhOffset')
 	.toFunction()
 ;
 

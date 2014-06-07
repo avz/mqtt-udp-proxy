@@ -21,6 +21,12 @@ EncoderConstructor.prototype.string = function(property, maxLength) {
 	return this;
 };
 
+EncoderConstructor.prototype.payload = function(property) {
+	this.codeBlocks.push(this._string(property, 0, true /* without length */));
+
+	return this;
+};
+
 EncoderConstructor.prototype.optionalString = function(property, maxLength) {
 	this.codeBlocks.push(this._optionalString(property, maxLength));
 
@@ -29,6 +35,12 @@ EncoderConstructor.prototype.optionalString = function(property, maxLength) {
 
 EncoderConstructor.prototype.uint16 = function(property) {
 	this.codeBlocks.push(this._uint16Body(property));
+
+	return this;
+};
+
+EncoderConstructor.prototype.conditionalUint16 = function(property) {
+	this.codeBlocks.push(this._conditionalUint16Body(property));
 
 	return this;
 };
@@ -77,12 +89,12 @@ EncoderConstructor.prototype._replace = function(code, replacements) {
 	return code;
 };
 
-EncoderConstructor.prototype._string = function(property, maxLength) {
+EncoderConstructor.prototype._string = function(property, maxLength, withoutLen) {
 	var code =
 		'if(Buffer.isBuffer(${property})) {\n'
-			+ this._bufferBody(property, maxLength).replace(/^/gm, '\t') + '\n'
+			+ this._bufferBody(property, maxLength, withoutLen).replace(/^/gm, '\t') + '\n'
 		+ '} else if(typeof(${property}) === "string") {\n'
-			+ this._stringBody(property, maxLength).replace(/^/gm, '\t') + '\n'
+			+ this._stringBody(property, maxLength, withoutLen).replace(/^/gm, '\t') + '\n'
 		+ '} else {\n'
 			+ '	throw new Error("String or Buffer expected in ${property}");\n'
 		+ '}\n';
@@ -174,7 +186,7 @@ EncoderConstructor.prototype._bodyWrap = function(bodyCode) {
 	return code.replace(/^/gm, '\t');
 };
 
-EncoderConstructor.prototype._stringBody = function(property, maxLength) {
+EncoderConstructor.prototype._stringBody = function(property, maxLength, withoutLen) {
 	var code = '/* _stringBody(' + property + ', ' + maxLength + '); */\n\n'
 		+ 'var _len = Buffer.byteLength(${property});\n\n';
 
@@ -183,14 +195,16 @@ EncoderConstructor.prototype._stringBody = function(property, maxLength) {
 			+ '	throw new Error("${property} is too long");\n\n'
 	}
 
-	code += checkBordersCode('_len + 2');
-	code += this._uint16Body('_len') + '\n';
+	if(!withoutLen)
+		code += this._uint16Body('_len') + '\n';
+
+	code += checkBordersCode('_len');
 	code += '_offset += _buf.write(${property}, _offset);\n';
 
 	return this._replace(code, {property: property, maxLength: maxLength});
 };
 
-EncoderConstructor.prototype._bufferBody = function(property, maxLength) {
+EncoderConstructor.prototype._bufferBody = function(property, maxLength, withoutLen) {
 	var code = '/* _bufferBody(' + property + ', ' + maxLength + '); */\n\n'
 		+ 'var _len = ${property}.length;\n\n';
 
@@ -199,8 +213,10 @@ EncoderConstructor.prototype._bufferBody = function(property, maxLength) {
 			+ '	throw new Error("${property} is too long");\n\n'
 	}
 
-	code += checkBordersCode('_len + 2');
-	code += this._uint16Body('_len') + '\n';
+	if(!withoutLen)
+		code += this._uint16Body('_len') + '\n';
+
+	code += checkBordersCode('_len')
 	code += '${property}.copy(_buf, _offset);\n';
 	code += '_offset += _len;\n'
 
@@ -228,6 +244,16 @@ EncoderConstructor.prototype._uint8Body = function(property) {
 	code += '_buf[_offset++] = ${property};\n';
 
 	return this._replace(code, {property: property});
+};
+
+EncoderConstructor.prototype._conditionalUint16Body = function(condition, property) {
+	var code = '/* _conditionalUint16Body(' + condition + ', ' + property + '); */\n\n';
+
+	code += 'if(' + condition + ') {\n';
+	code += this._uint16Body(property).replace(/^/gm, '\t') + '\n';
+	code += '}\n';
+
+	return code;
 };
 
 EncoderConstructor.prototype._lenBody = function(property) {

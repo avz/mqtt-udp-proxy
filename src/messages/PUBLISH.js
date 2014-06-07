@@ -16,8 +16,8 @@ require('util').inherits(PUBLISH, Message);
 
 PUBLISH.prototype.writeBody = (new EncoderConstructor)
 	.string('this.topic')
-	.uint16('this.id')
-	.string('this.body')
+	.uint16('this.qos', 'this.id')
+	.payload('this.body')
 	.toFunction()
 ;
 
@@ -25,8 +25,8 @@ PUBLISH.prototype.read = (new DecoderConstructor)
 	.inline('this.readFixedHeader')
 	.inline('this.checkRemainingLength')
 	.string('this.topic')
-	.uint16('this.id')
-	.string('this.body')
+	.conditionalUint16('this.qos', 'this.id')
+	.payload('this.body', 'this.length - (_offset - this._vhOffset)')
 	.toFunction()
 ;
 

@@ -45,6 +45,12 @@ DecoderConstructor.prototype.uint16 = function(property) {
 	return this;
 };
 
+DecoderConstructor.prototype.conditionalUint16 = function(property) {
+	this.codeBlocks.push(this._conditionalUint16Body(property));
+
+	return this;
+};
+
 DecoderConstructor.prototype.uint8 = function(property) {
 	this.codeBlocks.push(this._uint8Body(property));
 
@@ -57,8 +63,21 @@ DecoderConstructor.prototype.flags8 = function(defs) {
 	return this;
 };
 
+
+DecoderConstructor.prototype.payload = function(property, len) {
+	this.codeBlocks.push(this._payloadBody(property, len));
+
+	return this;
+};
+
 DecoderConstructor.prototype.len = function(property) {
 	this.codeBlocks.push(this._lenBody(property));
+
+	return this;
+};
+
+DecoderConstructor.prototype.saveOffset = function(property) {
+	this.codeBlocks.push(property + ' = _offset;\n');
 
 	return this;
 };
@@ -165,6 +184,20 @@ DecoderConstructor.prototype._stringBody = function(property) {
 	return code;
 };
 
+DecoderConstructor.prototype._payloadBody = function(property, remainingLength) {
+	if(!remainingLength)
+		throw new Error('Length expected')
+
+	var code = '/* _payloadBody(' + property + ', ' + remainingLength + '); */\n\n';
+
+	code += 'var _len = ' + remainingLength + ';\n';
+	code += checkBordersCode('_len');
+	code += property + ' = _buf.slice(_offset, _offset + _len);\n';
+	code += '_offset += _len;\n'
+console.log(code)
+	return code;
+};
+
 DecoderConstructor.prototype._bufferInplaceBody = function(property) {
 	var code = '/* _bufferBody(' + property + '); */\n\n';
 
@@ -182,6 +215,16 @@ DecoderConstructor.prototype._conditionalStringBody = function(condition, proper
 
 	code += 'if(' + condition + ') {\n';
 	code += this._stringBody(property).replace(/^/gm, '\t') + '\n';
+	code += '}\n';
+
+	return code;
+};
+
+DecoderConstructor.prototype._conditionalUint16Body = function(condition, property) {
+	var code = '/* _conditionalUint16Body(' + condition + ', ' + property + '); */\n\n';
+
+	code += 'if(' + condition + ') {\n';
+	code += this._uint16Body(property).replace(/^/gm, '\t') + '\n';
 	code += '}\n';
 
 	return code;
