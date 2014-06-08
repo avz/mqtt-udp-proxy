@@ -24,6 +24,9 @@ MessageStream._createTypedMessage = function(type) {
 	if(!typename)
 		throw new Error("Unknown message type: " + type);
 
+	if(!Message[typename])
+		return new Message;
+
 	return new (Message[typename]);
 };
 
@@ -84,20 +87,41 @@ var s = net.connect(1883, 'localhost', function() {
 
 	var connect = new Message.CONNECT;
 	connect.clientId = '12312321';
-	connect.keepAlive = 10;
+	connect.keepAlive = 3;
 
 	ms.send(connect);
-	ms.send(new Message.PINGREQ);
+	setInterval(function() {
+		ms.send(new Message.PINGREQ);
+	}, connect.keepAlive * 1000 / 2);
 
-	for(var i = 0; i < 1000; i++) {
-		setInterval(function() {
-			ms.send(new Message.PINGREQ);
-			n++;
-		}, 1);
-	}
+//	var message = new Message.PUBLISH;
+//	message.topic = 'hello';
+//	message.body = 'world';
+//	message.qos = 1;
+
+	var sub = new Message.SUBSCRIBE;
+	sub.subscribes = [
+		{
+			topic: 'hello',
+			qos: 1
+		}
+	];
+
+	ms.send(sub);
+
+	ms.on('message', function(m) {
+		console.log(m);
+	})
+
+//	for(var i = 0; i < 1000; i++) {
+//		setInterval(function() {
+//			ms.send(message);
+//			n++;
+//		}, 1);
+//	}
 });
 
 setInterval(function() {
-	console.log(n);
+//	console.log(n);
 	n = 0;
 }, 1000).unref();
